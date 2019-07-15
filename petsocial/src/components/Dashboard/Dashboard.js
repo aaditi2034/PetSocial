@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
-import { insertUpload } from '../../API/saveData';
-import { fetchData, fetchUploadData } from '../../API/fetchData';
+import { fetchData } from '../../API/fetchData';
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -18,7 +17,9 @@ class Dashboard extends React.Component {
       },
       showPost: {},
       uploadPostPopUp: false,
-      showUpdatedPost: false
+      uploadCategoryPopUp: false,
+      showUpdatedPost: false,
+      categories: ['CAT', 'DOG', 'BIRD', 'RABBIT', 'OTHERS']
     }
   }
   
@@ -32,7 +33,12 @@ class Dashboard extends React.Component {
   }
 
   closePopUp = () => {
-    this.setState({ uploadPostPopUp: false });
+    if(this.state.uploadPostPopUp) {
+      this.setState({ uploadPostPopUp: false });
+    }
+    if(this.state.uploadCategoryPopUp) {
+      this.setState({ uploadCategoryPopUp: false });
+    }
   }
 
   onDrop = (acceptedFiles) => {
@@ -46,9 +52,7 @@ class Dashboard extends React.Component {
     uploadDetails['date'] = current_date.getDate() + "-" +
                               (current_date.getMonth() + 1) + "-" +
                               current_date.getFullYear()
-    this.setState({ uploadDetails }, () => {
-      console.log('state...', this.state);
-    })
+    this.setState({ uploadDetails });
   }
 
   handleSubmit = () => {
@@ -70,6 +74,20 @@ class Dashboard extends React.Component {
     // });
     window.localStorage.setItem('uploadPostInfo', JSON.stringify(obj))
     this.setState({ showUpdatedPost: true, uploadPostPopUp: false, showPost: obj })
+  }
+
+  uploadCategories = () => {
+    this.setState({ uploadCategoryPopUp: true });
+  }
+
+  addCategory = (event) => {
+    const { categories } = this.state;
+    categories.push(event.target.value);
+    this.setState({ categories });
+  }
+
+  handleSubmitSelectedCategory = () => {
+    this.closePopUp();
   }
 
   render() {
@@ -104,11 +122,14 @@ class Dashboard extends React.Component {
                               name='category'
                               onChange={this.handleChange} >
                               <option>Select Category</option>
-                              <option>Cats</option>
-                              <option>Dogs</option>
-                              <option>Birds</option>
-                              <option>Rabbits</option>
-                              <option>Others</option>
+                              {
+                                this.state.categories.length > 0 ?
+                                  this.state.categories.map((item, index) => {
+                                    console.log('fdasfasfassdsfa')
+                                    return <option>{item}</option>
+                                  })
+                                : null
+                              }
                             </select>
                           </li><br/>
                           <li style={{ borderStyle: 'dotted', padding: '30px' }}>
@@ -144,7 +165,42 @@ class Dashboard extends React.Component {
                 <span className="btn_sep">
                   <img src="./img/btn_sep.png" alt="sep" />
                 </span>{" "}
-                <a href="/">Invite Friends</a>{" "}
+                <Link to="#" onClick={this.uploadCategories}>Upload Categories</Link>{" "}
+                {
+                  this.state.uploadCategoryPopUp ?
+                    <div className="popup_sec" id="pop_forgt">
+                      <div className="clos_btn">
+                        <img src="./img/clos.png" alt='Not loaded' id="clos_pop" onClick={this.closePopUp} />
+                      </div>
+                      <div className="pop_hdr">
+                        Upload Categories
+                      </div>
+                      <div className="man_contnt">
+                        <ul>
+                          <li>
+                            <div className="col-md-4" style={{ width: '100%' }}>
+                              <select
+                                id="categories"
+                                className="multiselect-ui form-control"
+                                onChange={this.addCategory}
+                                style={{width: '100%'}}
+                                multiple="multiple"
+                              >
+                                <option value="Mammels">Mammels</option>
+                                <option value="Fish">Fish</option>
+                                <option value="Amphibians">Amphibians</option>
+                                <option value="Reptiles">Reptiles</option>
+                                <option value="Reptiles">Lion</option>
+                                <option value="Reptiles">Frog</option>
+                              </select>
+                            </div>
+                          </li>
+                        </ul>
+                        <input type="submit" onClick={this.handleSubmitSelectedCategory} defaultValue="Ok" />
+                      </div>
+                    </div>
+                  : null
+                }
               </div>
               <div className="rght_cate">
                 <div className="rght_cate_hd" id="rght_cat_bg">
@@ -152,46 +208,22 @@ class Dashboard extends React.Component {
                 </div>
                 <div className="rght_list">
                   <ul>
-                    <li>
-                      <a href="/">
-                        <span className="list_icon">
-                          <img src="./img/icon_01.png" alt="up" />
-                        </span>{" "}
-                        CATS
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/">
-                        <span className="list_icon">
-                          <img src="./img/icon_02.png" alt="up" />
-                        </span>{" "}
-                        Dogs
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/">
-                        <span className="list_icon">
-                          <img src="./img/icon_03.png" alt="up" />
-                        </span>{" "}
-                        Birds
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/">
-                        <span className="list_icon">
-                          <img src="./img/icon_04.png" alt="up" />
-                        </span>{" "}
-                        Rabbit
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/">
-                        <span className="list_icon">
-                          <img src="./img/icon_05.png" alt="up" />
-                        </span>{" "}
-                        Others
-                      </a>
-                    </li>
+                      {
+                        this.state.categories.length > 0 ?
+                          this.state.categories.map((item, index) => {
+                            return (
+                              <li>
+                                <a href='/'>
+                                  <span className="list_icon">
+                                    <img src={`./img/icon_0${index+1}.png`} alt="up" />
+                                  </span>{" "}
+                                  {item}
+                                </a>
+                              </li>
+                            );
+                          })
+                        : null
+                      }
                   </ul>
                 </div>
               </div>
@@ -287,7 +319,6 @@ class Dashboard extends React.Component {
                   <div className="post_txt">4 New Post Updates</div>
                 </div>
               </div>
-              { console.log('showpost..', this.state.showPost)}
               {
                 this.state.showUpdatedPost ?
                   <div className="contnt_2">

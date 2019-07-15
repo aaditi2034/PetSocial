@@ -2868,6 +2868,33 @@ table th[class*="span"],
 
 .pro_info:hover .dropdown-menu{ display:block !important;}
 
+.dropdown-profile {
+  position: absolute;
+  top: 47px;
+  right: 0;
+  z-index: 1000;
+  display: block;
+  float: left;
+  min-width: 160px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  *border-right-width: 2px;
+  *border-bottom-width: 2px;
+  -webkit-border-radius: 0px 0px 6px 6px;
+     -moz-border-radius: 0px 0px 6px 6px;
+          border-radius: 0px 0px 6px 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+     -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -webkit-background-clip: padding-box;
+     -moz-background-clip: padding;
+          background-clip: padding-box;
+}
+
 .dropdown-menu {
   position: absolute;
   top: 47px;
@@ -2976,6 +3003,10 @@ font-style: italic;
   background-color: transparent;
   background-image: none;
   filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+}
+
+.hide-profile {
+  display: none;
 }
 
 .open {
@@ -6536,7 +6567,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffb02f', end
 	float: left;
 	font-family: Arial, Helvetica, sans-serif;
 	text-shadow: 0px 1px 0px #ac6209;
-	font-size: 24px;
+	font-size: 20px;
 	font-weight: bold;
 }
 .rght_btn a {
