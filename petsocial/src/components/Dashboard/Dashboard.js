@@ -1,5 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Dropzone from 'react-dropzone';
+import { insertUpload } from '../../API/saveData';
+import { fetchData, fetchUploadData } from '../../API/fetchData';
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -7,7 +10,66 @@ class Dashboard extends React.Component {
     this.state = {
       // email: props.location.state.email,
       email: 'ritu@gmail.com',
+      image: '',
+      uploadDetails: {
+        description: '',
+        date: '',
+        category: ''
+      },
+      showPost: {},
+      uploadPostPopUp: false,
+      showUpdatedPost: false
     }
+  }
+  
+  componentDidMount() {
+    const updatePostInfo = JSON.parse(window.localStorage.getItem('uploadPostInfo'));
+    this.setState({ uploadPostInfo: updatePostInfo });
+  }
+
+  uploadPost = () => {
+    this.setState({ uploadPostPopUp: true });
+  }
+
+  closePopUp = () => {
+    this.setState({ uploadPostPopUp: false });
+  }
+
+  onDrop = (acceptedFiles) => {
+    this.setState({ image: acceptedFiles[0] });
+  }
+
+  handleChange = (event) => {
+    let current_date = new Date();
+    const { uploadDetails } = this.state;
+    uploadDetails[event.target.name] = event.target.value;
+    uploadDetails['date'] = current_date.getDate() + "-" +
+                              (current_date.getMonth() + 1) + "-" +
+                              current_date.getFullYear()
+    this.setState({ uploadDetails }, () => {
+      console.log('state...', this.state);
+    })
+  }
+
+  handleSubmit = () => {
+    let obj = {};
+    fetchData().then(data => this.setState({ data }, () => {
+      for(let index = 0; index < data.length; index++) {
+        if ((data[index].email === this.state.email)) {
+          obj.user = data[index].username;
+          break;
+        }
+      }
+    }));
+    obj.image = this.state.image;
+    obj.description = this.state.uploadDetails.description;
+    obj.date = this.state.uploadDetails.date;
+    obj.category = this.state.uploadDetails.category;
+    // insertUpload(obj).then(() => {
+    //   fetchUploadData().then(data => console.log('..........', data));
+    // });
+    window.localStorage.setItem('uploadPostInfo', JSON.stringify(obj))
+    this.setState({ showUpdatedPost: true, uploadPostPopUp: false, showPost: obj })
   }
 
   render() {
@@ -24,7 +86,55 @@ class Dashboard extends React.Component {
                 <span className="btn_sep">
                   <img src="./img/btn_sep.png" alt="sep" />
                 </span>{" "}
-                <Link to="/upload-post" onClick={this.uploadPost}>Upload Post</Link>{" "}
+                <Link to="#" onClick={this.uploadPost}>Upload Post</Link>{" "}
+                {
+                  this.state.uploadPostPopUp ?
+                    <div className="popup_sec" id="pop_forgt">
+                      <div className="clos_btn">
+                        <img src="./img/clos.png" alt='Not loaded' id="clos_pop" onClick={this.closePopUp} />
+                      </div>
+                      <div className="pop_hdr">
+                        Upload Post
+                      </div>
+                      <div className="man_contnt">
+                        <ul>
+                          <li>
+                            Category <select
+                              type='select'
+                              name='category'
+                              onChange={this.handleChange} >
+                              <option>Select Category</option>
+                              <option>Cats</option>
+                              <option>Dogs</option>
+                              <option>Birds</option>
+                              <option>Rabbits</option>
+                              <option>Others</option>
+                            </select>
+                          </li><br/>
+                          <li style={{ borderStyle: 'dotted', padding: '30px' }}>
+                            <Dropzone onDrop={this.onDrop} accept='image/*' name='image'>
+                              {({getRootProps, getInputProps, isDragActive}) => (
+                                <div {...getRootProps()}>
+                                  <input {...getInputProps()} />
+                                  {isDragActive ? "Drop it like it's hot!" : 'Click me or drag a file to upload!'}
+                                </div>
+                              )}
+                            </Dropzone>
+                          </li><br/>
+                          <li>
+                            Description <input
+                              type='text'
+                              name='description'
+                              value={this.state.uploadDetails.description}
+                              placeholder='Enter descripton for selected image'
+                              onChange={this.handleChange} />
+                          </li>
+                        </ul>
+                        <input type="submit" onClick={this.handleSubmit} defaultValue="Ok" />
+                      </div>
+                    </div>
+                  : null
+                }
               </div>
               <div className="rght_btn">
                 {" "}
@@ -177,82 +287,104 @@ class Dashboard extends React.Component {
                   <div className="post_txt">4 New Post Updates</div>
                 </div>
               </div>
-              <div className="contnt_2">
-                <div className="div_a">
-                  <div className="div_title">
-                    User Interface PSD Source files Web Designing for web
-                  </div>
-                  <div className="btm_rgt">
-                    <div className="btm_arc">Cats</div>
-                  </div>
-                  <div className="div_top">
-                    <div className="div_top_lft">
-                      <img src="./img/img_6.png" alt="Not loaded" />Steave Waugh
-                    </div>
-                    <div className="div_top_rgt">
-                      <span className="span_date">02 Jan 2014</span>
-                      <span className="span_time">11:15am</span>
-                    </div>
-                  </div>
-                  <div className="div_image">
-                    <img src="./img/lft_img.png" alt="pet" />
-                  </div>
-                  <div className="div_btm">
-                    <div className="btm_list">
-                      <ul>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_001.png" alt="share" />
-                            </span>Share
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_002.png" alt="share" />
-                            </span>Flag
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_004.png" alt="share" />
-                            </span>4 Comments
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_003.png" alt="share" />
-                            </span>Likes
-                          </a>
-                        </li>
-                        <div
-                          className="like_count"
-                          style={{ marginRight: 10 }}
-                        >
-                          <span className="lft_cnt" />
-                          <span className="mid_cnt">10</span>
-                          <span className="rit_cnt" />
+              { console.log('showpost..', this.state.showPost)}
+              {
+                this.state.showUpdatedPost ?
+                  <div className="contnt_2">
+                    <div className="div_a">  
+                      <div> 
+                      {
+                        Object.keys(this.state.showPost).length > 0 ?
+                          <div className="div_title"> { this.state.showPost.description }</div>
+                        : null
+                      }
+                      </div>
+                      <div className="btm_rgt">
+                        {
+                          Object.keys(this.state.showPost).length > 0 ?
+                            <div className="btm_arc">{ this.state.showPost.category }</div>
+                          : null
+                        }
+                      </div>
+                      <div className="div_top">
+                        <div className="div_top_lft">
+                          <img src="./img/img_6.png" alt="Not loaded" />
+                          {
+                            Object.keys(this.state.showPost).length > 0 ?
+                              <span>{ this.state.showPost.user }</span>
+                            : null
+                          }
                         </div>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_003.png" alt="share" />
-                            </span>Unlike
-                          </a>
-                        </li>
-                        <div className="like_count">
-                          <span className="lft_cnt" />
-                          <span className="mid_cnt">4</span>
-                          <span className="rit_cnt" />
+                        <div className="div_top_rgt">
+                          {
+                            Object.keys(this.state.showPost).length > 0 ?
+                              <span className="span_date">{this.state.showPost.date}</span>
+                            : null
+                          }
+                          <span className="span_time">11:15am</span>
                         </div>
-                      </ul>
+                      </div>
+                      <div className="div_image">
+                        <img src="./img/lft_img.png" alt="pet" />
+                      </div>
+                      <div className="div_btm">
+                        <div className="btm_list">
+                          <ul>
+                            <li>
+                              <a href="/">
+                                <span className="btn_icon">
+                                  <img src="./img/icon_001.png" alt="share" />
+                                </span>Share
+                              </a>
+                            </li>
+                            <li>
+                              <a href="/">
+                                <span className="btn_icon">
+                                  <img src="./img/icon_002.png" alt="share" />
+                                </span>Flag
+                              </a>
+                            </li>
+                            <li>
+                              <a href="/">
+                                <span className="btn_icon">
+                                  <img src="./img/icon_004.png" alt="share" />
+                                </span>4 Comments
+                              </a>
+                            </li>
+                            <li>
+                              <a href="/">
+                                <span className="btn_icon">
+                                  <img src="./img/icon_003.png" alt="share" />
+                                </span>Likes
+                              </a>
+                            </li>
+                            <div
+                              className="like_count"
+                              style={{ marginRight: 10 }}
+                            >
+                              <span className="lft_cnt" />
+                              <span className="mid_cnt">10</span>
+                              <span className="rit_cnt" />
+                            </div>
+                            <li>
+                              <a href="/">
+                                <span className="btn_icon">
+                                  <img src="./img/icon_003.png" alt="share" />
+                                </span>Unlike
+                              </a>
+                            </li>
+                            <div className="like_count">
+                              <span className="lft_cnt" />
+                              <span className="mid_cnt">4</span>
+                              <span className="rit_cnt" />
+                            </div>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                : null
+              }
               <div className="contnt_2">
                 <div className="div_a">
                   <div className="div_title">

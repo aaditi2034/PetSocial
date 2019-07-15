@@ -29,7 +29,6 @@ class Login extends React.Component {
       for(let index = 0; index < data.length; index++) {
         if ((data[index].email === login_credentials.email)
           && (data[index].password === login_credentials.password)) {
-          window.localStorage.setItem('username', JSON.stringify(data[index].username));
           this.setState({ redirect: true });
         }
       }

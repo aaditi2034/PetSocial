@@ -12,4 +12,19 @@ export function insertData(props) {
       }),
     });
 }
+
+export function insertUpload(props) {
+  console.log('props....', props);
+  return fetch('http://localhost:3001/uploadPost', {
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    body: JSON.stringify({
+      username: props.username,
+      date: props.date,
+      description: props.description,
+      category: props.category,
+      image: props.image
+    }),
+  });
+}
   
