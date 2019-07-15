@@ -1,0 +1,36 @@
+{
+  "users": [
+    {
+      "username": "aaditi",
+      "password": "aaditi",
+      "email": "aditi@gmail.com",
+      "f_name": "Aditi",
+      "l_name": "Gupta",
+      "id": 1
+    },
+    {
+      "username": "arpit",
+      "password": "arpit",
+      "email": "arpit@gmail.com",
+      "f_name": "Arpit",
+      "l_name": "Gupta",
+      "id": 2
+    },
+    {
+      "username": "arpitgupta",
+      "password": "arpitgupta",
+      "email": "arpitgupta@gmail.com",
+      "f_name": "Arpit",
+      "l_name": "Gupta",
+      "id": 3
+    },
+    {
+      "username": "ritu",
+      "password": "ritu",
+      "email": "ritu@gmail.com",
+      "f_name": "Ritu",
+      "l_name": "Gupta",
+      "id": 4
+    }
+  ]
+}
