@@ -1,31 +1,55 @@
 import React from 'react';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
-import { fetchData } from '../../API/fetchData';
+import { SortByLatestTime, SortByOldestTime } from '../../libs/common/HelperFunction';
+import Modal from '../Modal';
 
 class Dashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       // email: props.location.state.email,
-      email: 'ritu@gmail.com',
+      email: 'aditi@gmail.com',
       image: '',
       uploadDetails: {
         description: '',
         date: '',
-        category: ''
+        category: '',
+        time: '',
+        filename: ''
       },
-      showPost: {},
+      showPost: [],
       uploadPostPopUp: false,
       uploadCategoryPopUp: false,
       showUpdatedPost: false,
-      categories: ['CAT', 'DOG', 'BIRD', 'RABBIT', 'OTHERS']
+      categories: [],
+      copyShowPost: [],
+      categeory_image: '',
+      category: '',
+      sortedLatestFirst: false,
+      sortedOldestTime: false,
     }
   }
   
   componentDidMount() {
-    const updatePostInfo = JSON.parse(window.localStorage.getItem('uploadPostInfo'));
-    this.setState({ uploadPostInfo: updatePostInfo });
+    // retrieving details of post
+    axios.post('http://localhost:8000/retrive', this.state.uploadDetails)
+    .then((response) => {
+      this.setState({ showPost: response.data, copyShowPost: response.data });
+    })
+    .catch((err) => {
+      console.log(err);
+    })  
+
+    // retrieving categories
+    axios.post('http://localhost:8000/findsave_categeory', this.state.categories)
+    .then((response) => {
+      this.setState({ categories: response.data });
+    })
+    .catch((err) => {
+      console.log(err);
+    })  
   }
 
   uploadPost = () => {
@@ -42,7 +66,13 @@ class Dashboard extends React.Component {
   }
 
   onDrop = (acceptedFiles) => {
-    this.setState({ image: acceptedFiles[0] });
+    if (this.state.uploadCategoryPopUp) {
+      this.setState({ categeory_image: acceptedFiles[0] });
+    } else {
+      const { uploadDetails } = this.state;
+      uploadDetails.filename = acceptedFiles[0];
+      this.setState({ uploadDetails });
+    } 
   }
 
   handleChange = (event) => {
@@ -51,29 +81,28 @@ class Dashboard extends React.Component {
     uploadDetails[event.target.name] = event.target.value;
     uploadDetails['date'] = current_date.getDate() + "-" +
                               (current_date.getMonth() + 1) + "-" +
-                              current_date.getFullYear()
+                              current_date.getFullYear();
+    uploadDetails['time'] = current_date.getHours() + ":" +
+                              current_date.getMinutes() + ":" +
+                              current_date.getSeconds();
     this.setState({ uploadDetails });
   }
 
-  handleSubmit = () => {
-    let obj = {};
-    fetchData().then(data => this.setState({ data }, () => {
-      for(let index = 0; index < data.length; index++) {
-        if ((data[index].email === this.state.email)) {
-          obj.user = data[index].username;
-          break;
-        }
-      }
-    }));
-    obj.image = this.state.image;
-    obj.description = this.state.uploadDetails.description;
-    obj.date = this.state.uploadDetails.date;
-    obj.category = this.state.uploadDetails.category;
-    // insertUpload(obj).then(() => {
-    //   fetchUploadData().then(data => console.log('..........', data));
-    // });
-    window.localStorage.setItem('uploadPostInfo', JSON.stringify(obj))
-    this.setState({ showUpdatedPost: true, uploadPostPopUp: false, showPost: obj })
+  submitUploadPost = () => {
+    let obj = new FormData();
+    obj.append("filename", this.state.uploadDetails.filename);
+    obj.append("description", this.state.uploadDetails.description);
+    obj.append("date", this.state.uploadDetails.date);
+    obj.append("category", this.state.uploadDetails.category);
+    obj.append("time", this.state.uploadDetails.time);
+
+    axios.post('http://localhost:8000/upload', obj)
+      .then((response) => {
+        this.setState({ showUpdatedPost: true, uploadPostPopUp: false, showPost: response.data, copyShowPost: response.data })
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }
 
   uploadCategories = () => {
@@ -81,13 +110,43 @@ class Dashboard extends React.Component {
   }
 
   addCategory = (event) => {
-    const { categories } = this.state;
-    categories.push(event.target.value);
-    this.setState({ categories });
+    this.setState({ category: event.target.value });
   }
 
   handleSubmitSelectedCategory = () => {
     this.closePopUp();
+    let obj = new FormData();
+    obj.append("categeory_image", this.state.categeory_image);
+    obj.append("category", this.state.category);
+    
+    axios.post('http://localhost:8000/save_categeory', obj)
+      .then((response) => {
+        this.setState({ categories: response.data });
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  sortByLatestFirst = () => {
+    var sortedLatestFirst= SortByLatestTime(this.state.showPost);
+    this.setState({ sortedLatestFirst, sortByOldestFirst: false });
+  }
+
+  sortByOldestFirst = () => {
+    var sortByOldestTime= SortByOldestTime(this.state.showPost);
+    this.setState({sortByOldestTime, sortByLatestFirst: false})
+  }
+
+  handleCategoryFilter = (category) => {
+    const { copyShowPost } = this.state;
+    const filteredPost = [];
+    for(let index = 0; index < copyShowPost.length; index++) {
+      if(copyShowPost[index].categeory === category) {
+        filteredPost.push(copyShowPost[index]);
+      }
+    }
+    this.setState({ showPost: filteredPost });
   }
 
   render() {
@@ -125,15 +184,14 @@ class Dashboard extends React.Component {
                               {
                                 this.state.categories.length > 0 ?
                                   this.state.categories.map((item, index) => {
-                                    console.log('fdasfasfassdsfa')
-                                    return <option>{item}</option>
+                                    return <option key={index}>{item.categeory}</option>
                                   })
                                 : null
                               }
                             </select>
                           </li><br/>
                           <li style={{ borderStyle: 'dotted', padding: '30px' }}>
-                            <Dropzone onDrop={this.onDrop} accept='image/*' name='image'>
+                            <Dropzone onDrop={this.onDrop} accept='image/*' name='filename'>
                               {({getRootProps, getInputProps, isDragActive}) => (
                                 <div {...getRootProps()}>
                                   <input {...getInputProps()} />
@@ -151,7 +209,7 @@ class Dashboard extends React.Component {
                               onChange={this.handleChange} />
                           </li>
                         </ul>
-                        <input type="submit" onClick={this.handleSubmit} defaultValue="Ok" />
+                        <input type="submit" onClick={this.submitUploadPost} defaultValue="Ok" />
                       </div>
                     </div>
                   : null
@@ -176,26 +234,29 @@ class Dashboard extends React.Component {
                         Upload Categories
                       </div>
                       <div className="man_contnt">
-                        <ul>
-                          <li>
-                            <div className="col-md-4" style={{ width: '100%' }}>
-                              <select
-                                id="categories"
-                                className="multiselect-ui form-control"
-                                onChange={this.addCategory}
-                                style={{width: '100%'}}
-                                multiple="multiple"
-                              >
-                                <option value="Mammels">Mammels</option>
-                                <option value="Fish">Fish</option>
-                                <option value="Amphibians">Amphibians</option>
-                                <option value="Reptiles">Reptiles</option>
-                                <option value="Reptiles">Lion</option>
-                                <option value="Reptiles">Frog</option>
-                              </select>
-                            </div>
-                          </li>
-                        </ul>
+                        <div className="col-md-4" style={{ width: '100%' }}>
+                          <ul>
+                            <li>
+                              <Dropzone onDrop={this.onDrop} accept='image/*' name='categeory_image'>
+                                {({getRootProps, getInputProps, isDragActive}) => (
+                                  <div {...getRootProps()}>
+                                    <input {...getInputProps()} />
+                                    {isDragActive ? "Drop it like it's hot!"
+                                      : 'Click me or drag a file to upload!'}
+                                  </div>
+                                )}
+                              </Dropzone>
+                            </li><br/>
+                            <li>  
+                              Category <input
+                                type="text"
+                                name="category"
+                                value={this.state.category}
+                                placeholder="Enter category"
+                                onChange={this.addCategory} />
+                            </li>
+                          </ul>
+                        </div>
                         <input type="submit" onClick={this.handleSubmitSelectedCategory} defaultValue="Ok" />
                       </div>
                     </div>
@@ -212,13 +273,16 @@ class Dashboard extends React.Component {
                         this.state.categories.length > 0 ?
                           this.state.categories.map((item, index) => {
                             return (
-                              <li>
-                                <a href='/'>
+                              <li key={index}>
+                                <Link to='#' onClick={() => this.handleCategoryFilter(item.categeory)} >
                                   <span className="list_icon">
-                                    <img src={`./img/icon_0${index+1}.png`} alt="up" />
+                                    <img
+                                      src={`http://localhost:8000/${item.fileName}`}
+                                      style={{width: '40px', height: '40px'}}
+                                      alt="up" />
                                   </span>{" "}
-                                  {item}
-                                </a>
+                                  {item.categeory}
+                                </Link>
                               </li>
                             );
                           })
@@ -280,18 +344,20 @@ class Dashboard extends React.Component {
                   <div className="post_list">
                     <ul>
                       <li>
-                        <a href="/">
+                        <Link
+                          to="#"
+                          onClick={!this.state.sortedLatestFirst ? this.sortByLatestFirst : null} >
                           <span className="list_img">
                             <img src="./img/img_1.png" alt="Not loaded" />
                           </span>Latest First
-                        </a>
+                        </Link>
                       </li>
                       <li>
-                        <a href="/">
+                        <Link href="#" onClick={!this.state.sortedOldestTime ? this.sortByOldestFirst : null}>
                           <span className="list_img">
                             <img src="./img/img_2.png" alt="Not loaded" />
                           </span>Oldest First
-                        </a>
+                        </Link>
                       </li>
                       <li>
                         <a href="/">
@@ -320,178 +386,99 @@ class Dashboard extends React.Component {
                 </div>
               </div>
               {
-                this.state.showUpdatedPost ?
-                  <div className="contnt_2">
-                    <div className="div_a">  
-                      <div> 
-                      {
-                        Object.keys(this.state.showPost).length > 0 ?
-                          <div className="div_title"> { this.state.showPost.description }</div>
-                        : null
-                      }
-                      </div>
-                      <div className="btm_rgt">
-                        {
-                          Object.keys(this.state.showPost).length > 0 ?
-                            <div className="btm_arc">{ this.state.showPost.category }</div>
-                          : null
-                        }
-                      </div>
-                      <div className="div_top">
-                        <div className="div_top_lft">
-                          <img src="./img/img_6.png" alt="Not loaded" />
-                          {
-                            Object.keys(this.state.showPost).length > 0 ?
-                              <span>{ this.state.showPost.user }</span>
-                            : null
-                          }
-                        </div>
-                        <div className="div_top_rgt">
-                          {
-                            Object.keys(this.state.showPost).length > 0 ?
-                              <span className="span_date">{this.state.showPost.date}</span>
-                            : null
-                          }
-                          <span className="span_time">11:15am</span>
-                        </div>
-                      </div>
-                      <div className="div_image">
-                        <img src="./img/lft_img.png" alt="pet" />
-                      </div>
-                      <div className="div_btm">
-                        <div className="btm_list">
-                          <ul>
-                            <li>
-                              <a href="/">
-                                <span className="btn_icon">
-                                  <img src="./img/icon_001.png" alt="share" />
-                                </span>Share
-                              </a>
-                            </li>
-                            <li>
-                              <a href="/">
-                                <span className="btn_icon">
-                                  <img src="./img/icon_002.png" alt="share" />
-                                </span>Flag
-                              </a>
-                            </li>
-                            <li>
-                              <a href="/">
-                                <span className="btn_icon">
-                                  <img src="./img/icon_004.png" alt="share" />
-                                </span>4 Comments
-                              </a>
-                            </li>
-                            <li>
-                              <a href="/">
-                                <span className="btn_icon">
-                                  <img src="./img/icon_003.png" alt="share" />
-                                </span>Likes
-                              </a>
-                            </li>
-                            <div
-                              className="like_count"
-                              style={{ marginRight: 10 }}
-                            >
-                              <span className="lft_cnt" />
-                              <span className="mid_cnt">10</span>
-                              <span className="rit_cnt" />
+                this.state.showPost !== null ?
+                  this.state.showPost.length > 0 ?
+                    this.state.showPost.map((obj, index) => {
+                      return <div key={index}>
+                        <div className="contnt_2">
+                          <div className="div_a">  
+                            <div className="div_title"> { obj.description }</div>
+                            <div className="btm_rgt">
+                              <div className="btm_arc">{ obj.categeory }</div>
                             </div>
-                            <li>
-                              <a href="/">
-                                <span className="btn_icon">
-                                  <img src="./img/icon_003.png" alt="share" />
-                                </span>Unlike
-                              </a>
-                            </li>
-                            <div className="like_count">
-                              <span className="lft_cnt" />
-                              <span className="mid_cnt">4</span>
-                              <span className="rit_cnt" />
+                            <div className="div_top">
+                              <div className="div_top_lft">
+                                <img src="./img/img_6.png" alt="Not loaded" />
+                                  <span>{ obj.user }</span>
+                              </div>
+                              <div className="div_top_rgt">
+                                <span className="span_date">{obj.date}</span>
+                                <span className="span_time">{obj.time}</span>
+                              </div>
                             </div>
-                          </ul>
+                            <div className="div_image">
+                              <Link to={{
+                                pathname: '/single-post',
+                                state: {
+                                  post: obj,
+                                  categories: this.state.categories,
+                                  email: this.state.email
+                                }
+                              }} >
+                                <img src={`http://localhost:8000/${obj.fileName}`} alt="pet" />
+                              </Link>
+                            </div>
+                            <div className="div_btm">
+                              <div className="btm_list">
+                                <ul>
+                                  <li>
+                                    <a href="/">
+                                      <span className="btn_icon">
+                                        <img src="./img/icon_001.png" alt="share" />
+                                      </span>Share
+                                    </a>
+                                  </li>
+                                  <li>
+                                    <a href="/">
+                                      <span className="btn_icon">
+                                        <img src="./img/icon_002.png" alt="share" />
+                                      </span>Flag
+                                    </a>
+                                  </li>
+                                  <li>
+                                    <a href="/">
+                                      <span className="btn_icon">
+                                        <img src="./img/icon_004.png" alt="share" />
+                                      </span>4 Comments
+                                    </a>
+                                  </li>
+                                  <li>
+                                    <a href="/">
+                                      <span className="btn_icon">
+                                        <img src="./img/icon_003.png" alt="share" />
+                                      </span>Likes
+                                    </a>
+                                  </li>
+                                  <div
+                                    className="like_count"
+                                    style={{ marginRight: 10 }}
+                                  >
+                                    <span className="lft_cnt" />
+                                    <span className="mid_cnt">10</span>
+                                    <span className="rit_cnt" />
+                                  </div>
+                                  <li>
+                                    <a href="/">
+                                      <span className="btn_icon">
+                                        <img src="./img/icon_003.png" alt="share" />
+                                      </span>Unlike
+                                    </a>
+                                  </li>
+                                  <div className="like_count">
+                                    <span className="lft_cnt" />
+                                    <span className="mid_cnt">4</span>
+                                    <span className="rit_cnt" />
+                                  </div>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    })
+                  : null
                 : null
               }
-              <div className="contnt_2">
-                <div className="div_a">
-                  <div className="div_title">
-                    User Interface PSD Source files Web Designing for web
-                  </div>
-                  <div className="btm_rgt">
-                    <div className="btm_arc">Dogs</div>
-                  </div>
-                  <div className="div_top">
-                    <div className="div_top_lft">
-                      <img src="./img/img_6.png" alt="Not loaded" />Steave Waugh
-                    </div>
-                    <div className="div_top_rgt">
-                      <span className="span_date">02 Jan 2014</span>
-                      <span className="span_time">11:15am</span>
-                    </div>
-                  </div>
-                  <div className="div_image">
-                    <img src="./img/lft_img1.png" alt="pet" />
-                  </div>
-                  <div className="div_btm">
-                    <div className="btm_list">
-                      <ul>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_001.png" alt="share" />
-                            </span>Share
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_002.png" alt="share" />
-                            </span>Flag
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_004.png" alt="share" />
-                            </span>4 Comments
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_003.png" alt="share" />
-                            </span>Likes
-                          </a>
-                        </li>
-                        <div
-                          className="like_count"
-                          style={{ marginRight: 10 }}
-                        >
-                          <span className="lft_cnt" />
-                          <span className="mid_cnt">10</span>
-                          <span className="rit_cnt" />
-                        </div>
-                        <li>
-                          <a href="/">
-                            <span className="btn_icon">
-                              <img src="./img/icon_003.png" alt="share" />
-                            </span>Unlike
-                          </a>
-                        </li>
-                        <div className="like_count">
-                          <span className="lft_cnt" />
-                          <span className="mid_cnt">4</span>
-                          <span className="rit_cnt" />
-                        </div>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
           <div className="clear" />

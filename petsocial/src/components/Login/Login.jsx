@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Redirect } from 'react-router-dom';
-import { fetchData } from '../../API/fetchData';
+import axios from 'axios';
 
 class Login extends React.Component {
   constructor() {
@@ -13,7 +13,8 @@ class Login extends React.Component {
       data: '',
       redirect: false,
       errorMsg: '',
-      btnDisable: false
+      btnDisable: false,
+      rememberMe: false
     }
   }
 
@@ -25,21 +26,34 @@ class Login extends React.Component {
 
   handleLogin = () => {
     const { login_credentials } = this.state;
-    fetchData().then(data => this.setState({ data }, () => {
-      for(let index = 0; index < data.length; index++) {
-        if ((data[index].email === login_credentials.email)
-          && (data[index].password === login_credentials.password)) {
+
+    // backend server
+    axios.post('http://localhost:8000/loginpostcall', login_credentials.email, login_credentials.password)
+      .then((response) => {
+        console.log(response);
+        if (response.status === 200) {
           this.setState({ redirect: true });
+        } else {
+          this.setState({ errorMsg: response.data });          
         }
-      }
-      if (!this.state.redirect) {
-        this.setState({ errorMsg: 'Invalid credentials' });
-      }
-    }));
-  }
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+   }
 
   handleRedirect = () => {
-    if(this.state.redirect) {
+    const fetchRememberedId = localStorage.getItem('remember-id');
+    if(fetchRememberedId !== null){
+      return <Redirect
+                to={{
+                  pathname:'/dashboard',
+                  state: {
+                    email: fetchRememberedId
+                  }
+                }}
+              />
+    } else if(this.state.redirect) {
       return <Redirect
                 to={{
                   pathname:'/dashboard',
@@ -50,6 +64,15 @@ class Login extends React.Component {
               />
     }
     return '';
+  }
+
+  handleRememberMe = () => {
+    if (!this.state.rememberMe) {
+      localStorage.setItem('remember-id', this.state.login_credentials.email);
+      this.setState({ rememberMe: true });
+    } else {
+      localStorage.removeItem('')
+    }
   }
 
   render() {
@@ -81,11 +104,11 @@ class Login extends React.Component {
                       onChange={this.handleChange} />
                   </li>
                   <li>
-                    <input type="checkbox" />Remember Me
+                    <input type="checkbox" onClick={this.handleRememberMe}/>Remember Me
                   </li>
                   <li>
                     <input type="submit" onClick={this.handleLogin} defaultValue="Log In" />
-                    <a href>Forgot Password</a>
+                    <a href='/'>Forgot Password</a>
                     <span style={{ color: 'red' }}>{this.state.errorMsg}</span>
                   </li>
                 </ul>

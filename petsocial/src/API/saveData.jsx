@@ -1,6 +1,6 @@
 
 export function insertData(props) {
-    return fetch('http://localhost:3001/users', {
+    return fetch('http://localhost:3000/users', {
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
       body: JSON.stringify({
@@ -14,8 +14,7 @@ export function insertData(props) {
 }
 
 export function insertUpload(props) {
-  console.log('props....', props);
-  return fetch('http://localhost:3001/uploadPost', {
+  return fetch('http://localhost:3000/uploadPost', {
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
     body: JSON.stringify({
@@ -23,7 +22,8 @@ export function insertUpload(props) {
       date: props.date,
       description: props.description,
       category: props.category,
-      image: props.image
+      image: props.image,
+      time: props.time
     }),
   });
 }

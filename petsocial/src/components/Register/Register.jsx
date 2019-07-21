@@ -1,21 +1,19 @@
 import React from 'react';
 import { Link, Redirect } from 'react-router-dom';
-import { insertData } from '../../API/saveData';
-import { fetchData } from '../../API/fetchData';
+import axios from 'axios';
 
 const EMAIL = RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
 
 class Register extends React.Component {
   constructor(props) {
-    console.log(props);
     super(props);
     this.state = {
       newMember: {
         username: '',
         password: '',
         email: '',
-        f_name: '',
-        l_name: ''
+        firstname: '',
+        lastname: ''
       },
       agree_terms: false,
       redirect: false,
@@ -26,12 +24,14 @@ class Register extends React.Component {
         password: '',
         f_name: 'Enter First Name',
         l_name: 'Enter Last Name' },
+      showAPIerr: false,
+      api_err_msg: '',
       btnDisable: false
     }
   }
 
   handleChange = (event) => {
-    const { newMember, formErrors } = this.state;
+    const { newMember, formErrors, newMem } = this.state;
     newMember[event.target.name] = event.target.value;
     switch (event.target.name) {
       case 'username':
@@ -43,16 +43,16 @@ class Register extends React.Component {
       case 'password':
         formErrors.password = event.target.value.length > 5 ? '' : 'Password is not in range';
         break;
-      case 'f_name':
+      case 'firstname':
         formErrors.f_name = event.target.value !== '' ? '' : 'Enter First Name';
         break;
-      case 'l_name':
+      case 'lastname':
         formErrors.l_name = event.target.value !== '' ? '' : 'Enter Last Name';
         break;
       default:
         break;
     }
-    this.setState({ newMember, formErrors });
+    this.setState({ newMember, formErrors, newMem });
   }
 
   handleClickCheck = () => {
@@ -61,13 +61,27 @@ class Register extends React.Component {
   }
 
   registerData = () => {
-    const { newMember } = this.state;
-    insertData(newMember).then(() => {
-      fetchData().then(data => this.setState({ data }));
-    });
-    this.setState({
-      redirect: true
+    const { newMem } = this.state;
+
+    ///backend server
+    axios.post('http://localhost:8000/adduser', newMem)
+    .then((response) => {
+      if (response.data !== '') {
+        this.setState({ api_err_msg:  response.data }, () => {
+          if(response.status === 200){
+            this.setState({
+              redirect: true
+            });
+          } else {
+            this.setState({ showAPIerr: true });
+          }
+        });
+      }
     })
+    .catch(function (error) {
+      console.log(error);
+    });
+
   }
   
   renderRedirect = () => {
@@ -80,7 +94,7 @@ class Register extends React.Component {
     const { newMember, formErrors, agree_terms } = this.state;
     const isValid = newMember.username.length > 0
                       && newMember.password.length > 0 && newMember.email.length > 0
-                      && newMember.f_name.length > 0 && newMember.l_name.length > 0
+                      && newMember.firstname.length > 0 && newMember.lastname.length > 0
                       && agree_terms ;
     return (
       <div>
@@ -123,8 +137,8 @@ class Register extends React.Component {
                     <span>First Name</span>
                     <input
                       type="text"
-                      name="f_name"
-                      value={newMember.f_name}
+                      name="firstname"
+                      value={newMember.firstname}
                       placeholder="Enter your First Name"
                       onChange={this.handleChange} />
                   </li>
@@ -132,8 +146,8 @@ class Register extends React.Component {
                     <span>Last Name</span>
                     <input
                       type="text"
-                      name="l_name"
-                      value={newMember.l_name}
+                      name="lastname"
+                      value={newMember.lastname}
                       placeholder="Enter your Last Name"
                       onChange={this.handleChange} />
                   </li>
@@ -148,6 +162,11 @@ class Register extends React.Component {
                       disabled={!isValid}
                       defaultValue="Register" />
                   </li>
+                  {
+                    this.state.showAPIerr ?
+                      <span style={{color: 'red'}}>{this.state.api_err_msg}</span>
+                    : null
+                  }
                 </ul>
                 <div className="addtnal_acnt">
                   I already have an account.<Link to='/login'>Login My Account !</Link>

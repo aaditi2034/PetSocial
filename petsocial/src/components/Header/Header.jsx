@@ -12,7 +12,6 @@ class Header extends React.Component {
   }
 
   handleLogout = () => {
-    console.log('sbjdsb')
     this.setState({ showprofile: false });
   }
 
@@ -63,14 +62,14 @@ class Header extends React.Component {
               <img src="img/pic.png" alt="Not loaded" />{" "}
             </div>
             <div className="info_div1" onClick={this.profile} style={{cursor: 'pointer'}}>Me</div>
-            <ul className={`${this.state.showprofile ? `dropdown-profile` : `hide-profile`}`}>
-              <li>
-                <Link
-                  to='/login'
-                  onClick={this.handleLogout}
-                  style={{fontSize:'15px', color: 'gray', paddingLeft: '10px'}}>Logout</Link>
-              </li>
-            </ul>
+              <ul className={`${this.state.showprofile ? `dropdown-profile` : `hide-profile`}`}>
+                <li>
+                  <Link
+                    to='/login'
+                    onClick={this.handleLogout}
+                    style={{fontSize:'15px', color: 'gray', paddingLeft: '10px'}}>Logout</Link>
+                </li>
+              </ul>
           </div>
         </div>
       </div>
