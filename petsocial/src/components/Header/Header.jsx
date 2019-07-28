@@ -1,23 +1,38 @@
 import React from 'react';
-import { Link } from 'react-router-dom'
+import { Link, Redirect } from 'react-router-dom';
 
 class Header extends React.Component {
   constructor() {
     super();
-    this.state= { showprofile: false };
+    this.state= { showprofile: false, redirect: false };
   }
 
   profile = () => {
     this.setState({ showprofile: true });
   }
 
+  handleRedirect = () => {
+    const fetchRememberedId = localStorage.getItem('remember-id');
+    if(fetchRememberedId !== null){
+      localStorage.removeItem('remember-id');
+    }
+    if ( this.state.redirect) { 
+      return <Redirect
+        to= {{
+          pathname: '/login'
+        }} />
+    }
+    return '';
+  }
+
   handleLogout = () => {
-    this.setState({ showprofile: false });
+    this.setState({ showprofile: false, redirect: true });
   }
 
   render() {
     return (
       <div className="header">
+        { this.handleRedirect() }
         <div className="header_lft">
           <div className="logo">
             <a href="/">
@@ -27,21 +42,16 @@ class Header extends React.Component {
           <div className="navigatn">
             <ul>
               <li>
-                <a href="/" className="active">
-                  Home
-                </a>
+                <a href="/dashboard" className="active">Home</a>
               </li>
               <li>
-                <a href="/"> E-Coupons </a>
+                <a href="/dashboard"> E-Coupons </a>
               </li>
               <li>
-                <a href="/">E-Brands </a>
+                <a href="/dashboard">E-Brands </a>
               </li>
               <li>
-                <a href="/"> Resuse Market </a>
-              </li>
-              <li>
-                <a href="/"> Lost and Found</a>
+                <a href="/dashboard"> Resuse Market </a>
               </li>
             </ul>
           </div>

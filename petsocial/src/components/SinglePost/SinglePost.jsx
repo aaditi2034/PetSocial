@@ -67,15 +67,7 @@ class SinglePost extends React.Component {
     // hitting like api
     axios.post('http://localhost:8000/like', obj)
     .then((response) => {
-      console.log('*******', response.data[0]);
-      const { id } = response.data[0];
-      const { postInfo } = this.state;
-      console.log('post info....', postInfo);
-      for(let index = 0; index < response.data[0].length; index++) {
-        if(response.data[0][index]._id === postInfo._id) {
-          console.log('helo')
-        }
-      }
+      this.setState({ postInfo: response.data[0] });
     })
   }
 
@@ -214,14 +206,24 @@ class SinglePost extends React.Component {
                           <Link to="#" onClick={this.handleLikes}>
                             <span className="btn_icon">
                               <img src="./img/icon_003.png" alt="share" />
-                            </span>0 Likes
+                            </span>
+                            {
+                              postInfo.like.length > 0 ?
+                                <p>1 Likes</p>
+                              : <p>0 Likes</p>
+                            }
                           </Link>
                         </li>
                         <li>
                           <a href="/">
                             <span className="btn_icon">
                               <img src="./img/icon_004.png" alt="share" />
-                            </span>4 Comments
+                            </span>
+                            {
+                              postInfo.comment.length > 0 ?
+                                <p>{postInfo.comment.length} Comments</p>
+                              : <p>0 Comment</p>
+                            }
                           </a>
                         </li>
                       </ul>

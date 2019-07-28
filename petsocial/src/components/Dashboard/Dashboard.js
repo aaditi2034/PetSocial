@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 import { SortByLatestTime, SortByOldestTime } from '../../libs/common/HelperFunction';
-import Modal from '../Modal';
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -29,6 +28,7 @@ class Dashboard extends React.Component {
       category: '',
       sortedLatestFirst: false,
       sortedOldestTime: false,
+      isValidPost: false,
     }
   }
   
@@ -96,9 +96,21 @@ class Dashboard extends React.Component {
     obj.append("category", this.state.uploadDetails.category);
     obj.append("time", this.state.uploadDetails.time);
 
+    const { uploadDetails } = this.state;
+    uploadDetails.category = '';
+    uploadDetails.fileName = '';
+    uploadDetails.description = '';
+
+    // upload post
     axios.post('http://localhost:8000/upload', obj)
       .then((response) => {
-        this.setState({ showUpdatedPost: true, uploadPostPopUp: false, showPost: response.data, copyShowPost: response.data })
+        this.setState({
+          showUpdatedPost: true,
+          uploadPostPopUp: false,
+          showPost: response.data,
+          copyShowPost: response.data,
+          uploadDetails
+        })
       })
       .catch(function (error) {
         console.log(error);
@@ -150,6 +162,11 @@ class Dashboard extends React.Component {
   }
 
   render() {
+    const { uploadDetails } = this.state;
+    const isValisPost = uploadDetails.category.length > 0
+                          && uploadDetails.filename !== null
+                          && uploadDetails.description.length > 0;
+    const isValidCategory = this.state.categeory_image.length > 0 && this.state.category.length > 0;
     return (
       <div>
         <div className="container">
@@ -196,6 +213,9 @@ class Dashboard extends React.Component {
                                 <div {...getRootProps()}>
                                   <input {...getInputProps()} />
                                   {isDragActive ? "Drop it like it's hot!" : 'Click me or drag a file to upload!'}
+                                  <span style={{border: '1px', color: 'purple'}}>
+                                    {this.state.uploadDetails.filename.name}
+                                  </span>
                                 </div>
                               )}
                             </Dropzone>
@@ -209,7 +229,11 @@ class Dashboard extends React.Component {
                               onChange={this.handleChange} />
                           </li>
                         </ul>
-                        <input type="submit" onClick={this.submitUploadPost} defaultValue="Ok" />
+                        <input
+                          type="submit"
+                          onClick={this.submitUploadPost}
+                          disabled={!isValisPost}
+                          defaultValue="Ok" />
                       </div>
                     </div>
                   : null
@@ -257,7 +281,10 @@ class Dashboard extends React.Component {
                             </li>
                           </ul>
                         </div>
-                        <input type="submit" onClick={this.handleSubmitSelectedCategory} defaultValue="Ok" />
+                        <input
+                          type="submit"
+                          onClick={this.handleSubmitSelectedCategory}
+                          defaultValue="Ok" />
                       </div>
                     </div>
                   : null

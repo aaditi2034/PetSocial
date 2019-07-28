@@ -30,7 +30,6 @@ class Login extends React.Component {
     // backend server
     axios.post('http://localhost:8000/loginpostcall', login_credentials.email, login_credentials.password)
       .then((response) => {
-        console.log(response);
         if (response.status === 200) {
           this.setState({ redirect: true });
         } else {
@@ -43,17 +42,7 @@ class Login extends React.Component {
    }
 
   handleRedirect = () => {
-    const fetchRememberedId = localStorage.getItem('remember-id');
-    if(fetchRememberedId !== null){
-      return <Redirect
-                to={{
-                  pathname:'/dashboard',
-                  state: {
-                    email: fetchRememberedId
-                  }
-                }}
-              />
-    } else if(this.state.redirect) {
+    if(this.state.redirect) {
       return <Redirect
                 to={{
                   pathname:'/dashboard',
