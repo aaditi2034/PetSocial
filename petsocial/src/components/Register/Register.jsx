@@ -110,6 +110,7 @@ class Register extends React.Component {
                     <input
                       type="text"
                       name="username"
+                      style={{ color: '#e65100' }}
                       value={newMember.username}
                       placeholder="Enter your Username"
                       onChange={this.handleChange} />
@@ -118,8 +119,9 @@ class Register extends React.Component {
                   <li>
                     <span>Password</span>
                     <input
-                      type="text"
+                      type="password"
                       name="password"
+                      style={{ color: '#e65100', width: '100%', height: '30px' }}
                       value={newMember.password}
                       placeholder="Enter your Password"
                       onChange={this.handleChange} />
@@ -129,6 +131,7 @@ class Register extends React.Component {
                     <input
                       type="text"
                       name="email"
+                      style={{ color: '#e65100' }}
                       value={newMember.email}
                       placeholder="Enter your Email"
                       onChange={this.handleChange} />
@@ -138,6 +141,7 @@ class Register extends React.Component {
                     <input
                       type="text"
                       name="firstname"
+                      style={{ color: '#e65100' }}
                       value={newMember.firstname}
                       placeholder="Enter your First Name"
                       onChange={this.handleChange} />
@@ -147,6 +151,7 @@ class Register extends React.Component {
                     <input
                       type="text"
                       name="lastname"
+                      style={{ color: '#e65100' }}
                       value={newMember.lastname}
                       placeholder="Enter your Last Name"
                       onChange={this.handleChange} />

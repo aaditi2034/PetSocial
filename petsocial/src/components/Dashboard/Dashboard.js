@@ -8,8 +8,7 @@ class Dashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      // email: props.location.state.email,
-      email: 'aditi@gmail.com',
+      email: props.location.state.email,
       image: '',
       uploadDetails: {
         description: '',
@@ -133,7 +132,7 @@ class Dashboard extends React.Component {
     
     axios.post('http://localhost:8000/save_categeory', obj)
       .then((response) => {
-        this.setState({ categories: response.data });
+        this.setState({ categories: response.data, categeory: '', categeory_image: '' });
       })
       .catch(function (error) {
         console.log(error);
@@ -166,7 +165,8 @@ class Dashboard extends React.Component {
     const isValisPost = uploadDetails.category.length > 0
                           && uploadDetails.filename !== null
                           && uploadDetails.description.length > 0;
-    const isValidCategory = this.state.categeory_image.length > 0 && this.state.category.length > 0;
+    const isValidCategory = Object.keys(this.state.categeory_image).length > 0
+                              && this.state.category.length > 0;
     return (
       <div>
         <div className="container">
@@ -283,6 +283,7 @@ class Dashboard extends React.Component {
                         </div>
                         <input
                           type="submit"
+                          disabled={!isValidCategory}
                           onClick={this.handleSubmitSelectedCategory}
                           defaultValue="Ok" />
                       </div>

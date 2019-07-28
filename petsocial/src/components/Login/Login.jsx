@@ -65,6 +65,8 @@ class Login extends React.Component {
   }
 
   render() {
+    const isValid = this.state.login_credentials.email.length > 0 &&
+      this.state.login_credentials.password.length > 0;
     return (
       <div>
         { this.handleRedirect() }
@@ -79,6 +81,7 @@ class Login extends React.Component {
                     <input
                       type="text"
                       name="email"
+                      style={{ color: '#e65100' }}
                       value={this.state.email}
                       placeholder="Enter your email"
                       onChange={this.handleChange} />
@@ -86,8 +89,9 @@ class Login extends React.Component {
                   <li>
                     <span>Password</span>
                     <input
-                      type="text"
+                      type="password"
                       name="password"
+                      style={{ color: '#e65100', width: '100%', height: '30px' }}
                       value={this.state.password}
                       placeholder="Enter your Password"
                       onChange={this.handleChange} />
@@ -96,7 +100,12 @@ class Login extends React.Component {
                     <input type="checkbox" onClick={this.handleRememberMe}/>Remember Me
                   </li>
                   <li>
-                    <input type="submit" onClick={this.handleLogin} defaultValue="Log In" />
+                    <input
+                      type="submit"
+                      disabled={!isValid}
+                      style={{ cursor: isValid ? 'pointer' : 'not-allowed' }}
+                      onClick={this.handleLogin}
+                      defaultValue="Log In" />
                     <a href='/'>Forgot Password</a>
                     <span style={{ color: 'red' }}>{this.state.errorMsg}</span>
                   </li>
